@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Rental Sepeda</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 20px; color: #333; }
+        h1 { text-align: center; color: #2c3e50; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .sepeda-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 15px; margin-top: 20px; }
+        .card { background: white; border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s; }
+        .card:hover { transform: translateY(-5px); }
+        .badge { background-color: #27ae60; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .btn-pinjam { background-color: #3498db; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; cursor: pointer; margin-top: 15px; font-weight: bold; }
+        .btn-pinjam:hover { background-color: #2980b9; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🚲 Katalog Sepeda Kampus</h1>
+        <p style="text-align: center;">Daftar sepeda yang siap dipinjam hari ini.</p>
+        
+        <div id="tempat-sepeda" class="sepeda-list">
+            <p style="text-align: center; width: 100%;">Sedang memuat data dari database...</p>
+        </div>
+    </div>
+
+    <script>
+        // Memanggil API milikmu sendiri!
+        fetch('http://localhost:8080/sepeda/tersedia')
+            .then(response => response.json())
+            .then(data => {
+                const wadah = document.getElementById('tempat-sepeda');
+                wadah.innerHTML = ''; // Hapus tulisan loading
+
+                if (data.length === 0) {
+                    wadah.innerHTML = '<p style="text-align: center; width: 100%;">Wah, semua sepeda sedang dipinjam!</p>';
+                    return;
+                }
+
+                // Looping untuk merakit kotak HTML setiap sepeda
+                data.forEach(sepeda => {
+                    const kotak = document.createElement('div');
+                    kotak.className = 'card';
+                    kotak.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="margin: 0;">${sepeda.merk}</h3>
+                            <span class="badge">${sepeda.status}</span>
+                        </div>
+                        <p style="color: #7f8c8d; font-size: 14px; margin-top: 5px;">ID Sepeda: ${sepeda.id}</p>
+                        <button class="btn-pinjam" onclick="prosesPinjam(${sepeda.id})">
+                            Pinjam Sepeda
+                        </button>
+                    `;
+                    wadah.appendChild(kotak);
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('tempat-sepeda').innerHTML = '<p style="color:red; text-align:center;">Gagal terhubung ke Server Spring Boot!</p>';
+            });
+
+            // Fungsi untuk mengeksekusi peminjaman ke Spring Boot
+        function prosesPinjam(idSepeda) {
+            // Kita simulasi yang sedang login adalah User ID 1 (Sofya)
+            const idUserLoggedIn = 1; 
+
+            // Munculkan pop-up minta durasi pinjam ke user
+            let inputDurasi = prompt("Berapa jam kamu ingin meminjam sepeda ini?");
+
+            // Kalau user mengisi angka dan menekan OK
+            if (inputDurasi != null && inputDurasi > 0) {
+                
+                // Tembak API POST persis seperti di Thunder Client!
+                fetch(`http://localhost:8080/pinjam/${idSepeda}/user/${idUserLoggedIn}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        durasi: parseInt(inputDurasi)
+                    })
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert('🎉 Sepeda berhasil dipinjam!');
+                        // Refresh halaman otomatis agar sepedanya hilang dari daftar tersedia
+                        window.location.reload(); 
+                    } else {
+                        alert('❌ Gagal meminjam sepeda. Silakan coba lagi.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Terjadi kesalahan pada server!');
+                });
+            }
+        }
+
+    </script>
+
+</body>
+</html>

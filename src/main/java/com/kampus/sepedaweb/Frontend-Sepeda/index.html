@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peminjaman Sepeda PNC</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f4; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 400px; margin-bottom: 20px; }
+        input, button { display: block; width: 90%; margin-bottom: 10px; padding: 10px; }
+        button { background-color: #007bff; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+
+    <div class="card" id="loginCard">
+        <h2>Login Mahasiswa</h2>
+        <input type="text" id="username" placeholder="Masukkan Username (sofyan_keren)">
+        <input type="password" id="password" placeholder="Masukkan Password (password123)">
+        <button onclick="login()">Masuk</button>
+        <p id="pesanLogin" style="color: red;"></p>
+    </div>
+
+    <div class="card" id="sepedaCard" style="display: none;">
+        <h2>Daftar Sepeda PNC</h2>
+        <button onclick="muatSepeda()">Muat Data Sepeda</button>
+        <button onclick="logout()" style="background-color: red;">Logout</button>
+        <div id="sepeda" style="border-right: 1px solid; border-left: 1px solid;">
+            <p>belum ada data</p>
+        </div>
+
+        <div id="kembaliArea" style="display: none; margin-top: 20px;">
+
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 1. FUNGSI LOGIN
+        // ==========================================
+        async function login() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+            const pesan = document.getElementById('pesanLogin');
+
+            try {
+                const response = await fetch('http://localhost:8080/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: user, password: pass })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('TOKEN_SAYA', data.token);
+                    document.getElementById('loginCard').style.display = 'none';
+                    document.getElementById('sepedaCard').style.display = 'block';
+                    muatSepeda(); // Langsung muat sepeda setelah sukses login
+                } else {
+                    pesan.innerText = "Gagal: " + data.pesan;
+                }
+            } catch (error) {
+                pesan.innerText = "Server Backend mati atau masalah CORS!";
+            }
+        }
+
+        // ==========================================
+        // 2. FUNGSI MUAT DAFTAR SEPEDA
+        // ==========================================
+        async function muatSepeda() {
+            const token = localStorage.getItem('TOKEN_SAYA');
+            const sepedaData = document.getElementById('sepeda');
+
+            try {
+                const response = await fetch('http://localhost:8080/sepeda?page=0&size=5', {
+                    method: 'GET',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    sepedaData.innerHTML = ''; 
+                    data.content.forEach(sepeda => {
+                        sepedaData.innerHTML += `
+                        <div style="border: 1px solid; padding: 10px; margin-bottom: 5px;">
+                            <h3>Sepeda ${sepeda.merk}</h3>
+                            <p>Status: <b>${sepeda.status}</b></p>
+                            <button onclick="prosesPinjam(${sepeda.id})">Pinjam Sepeda Ini</button>
+                        </div>
+                        `;
+                    });
+                } else {
+                    alert("Token kadaluarsa atau tidak valid!");
+                    logout();
+                }
+            } catch (error) {
+                alert("Gagal menghubungi server!");
+            }
+        }
+
+        // ==========================================
+        // 3. FUNGSI PINJAM SEPEDA
+        // ==========================================
+        async function prosesPinjam(idSepeda) {
+            let inputDurasi = prompt("Berapa jam?");
+            if(!inputDurasi) return; // Batal jika kosong
+            
+            const token = localStorage.getItem("TOKEN_SAYA");
+            
+            try {
+                const response = await fetch('http://localhost:8080/pinjam/' + idSepeda, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token 
+                    },
+                    body: JSON.stringify({ durasi: parseInt(inputDurasi) })
+                });
+                
+                let data;
+                try {
+                    data = await response.json();
+                } catch(e) {
+                    data = { pesan: "Tidak ada rincian error." };
+                }
+
+                if(response.ok){
+                    alert("Berhasil pinjam sepeda!");
+                    
+                    // Simpan ID Pinjam yang benar
+                    const idTransaksi = data.idPinjam || data.id; 
+                    localStorage.setItem("pinjam", idTransaksi);
+                    
+                    // Manipulasi Tampilan
+                    document.getElementById("sepeda").style.display = 'none';
+                    
+                    const kembalihtml = document.getElementById('kembaliArea');
+                    kembalihtml.style.display = 'block';
+                    kembalihtml.innerHTML = `
+                        <div style="background: #ffeeba; padding: 15px; border-radius: 5px;">
+                            <h3>🚲 Anda sedang meminjam sepeda!</h3>
+                            <button onclick="kembali(${idTransaksi})" style="background-color: #dc3545; color: white; width: 100%; padding: 10px;">
+                                Kembalikan Sepeda Sekarang
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    // BACA ISI PAKET DARI SPRING BOOT!
+                    const dataError = await response.json(); 
+                    alert("Gagal mengembalikan: " + (dataError.pesan || "Tidak ada pesan"));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Terjadi kesalahan pada server!');
+            }
+        }
+
+        // ==========================================
+        // 4. FUNGSI KEMBALIKAN SEPEDA
+        // ==========================================
+        async function kembali(idPinjam) {
+            let yakin = confirm("Yakin balikin sekarang?");
+            if(!yakin) return;
+
+            const token = localStorage.getItem("TOKEN_SAYA");
+            
+            try {
+                const response = await fetch('http://localhost:8080/pinjam/' + idPinjam + '/kembali', {
+                    method: 'PUT',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+
+                if(response.ok){
+                    alert("Berhasil dikembalikan!");
+                    
+                    // Hapus ingatan pinjam
+                    localStorage.removeItem("pinjam");
+                    
+                    // Kembalikan tampilan
+                    document.getElementById("kembaliArea").style.display = "none";
+                    document.getElementById('sepeda').style.display = 'block';
+                    muatSepeda(); // Refresh daftar sepeda
+                } else {
+                    alert("Gagal mengembalikan sepeda.");
+                }
+            } catch (error) {
+                alert('Terjadi kesalahan pada server!');
+            }
+        }
+
+        // ==========================================
+        // 5. FUNGSI LOGOUT
+        // ==========================================
+        function logout() {
+            localStorage.removeItem('TOKEN_SAYA');
+            localStorage.removeItem('pinjam'); // Hapus ingatan pinjam jika ada
+            
+            document.getElementById('loginCard').style.display = 'block';
+            document.getElementById('sepedaCard').style.display = 'none';
+            document.getElementById('sepeda').innerHTML = '<p>Belum ada data...</p>';
+            document.getElementById('kembaliArea').style.display = 'none'; // Sembunyikan area kembali
+        }
+
+        // ==========================================
+        // 6. LOGIKA GLOBAL (BERJALAN SAAT HALAMAN DI-REFRESH)
+        // ==========================================
+        if(localStorage.getItem('TOKEN_SAYA')) {
+            document.getElementById('loginCard').style.display = 'none';
+            document.getElementById('sepedaCard').style.display = 'block';
+
+            // Cek apakah ada sepeda yang sedang dipinjam
+            let idAktif = localStorage.getItem("pinjam");
+
+            if(idAktif){
+                document.getElementById('sepeda').style.display = 'none'; 
+                
+                let kembalihtml = document.getElementById('kembaliArea');
+                kembalihtml.style.display = 'block';
+                kembalihtml.innerHTML = `
+                    <div style="background: #ffeeba; padding: 15px; border-radius: 5px;">
+                        <h3>🚲 Anda sedang meminjam sepeda!</h3>
+                        <button onclick="kembali(${idAktif})" style="background-color: #dc3545; color: white; width: 100%; padding: 10px;">
+                            Kembalikan Sepeda Sekarang
+                        </button>
+                    </div>
+                `;
+            } else {
+                // Jika tidak ada pinjaman aktif, muat daftar sepeda normal
+                muatSepeda();
+            }
+        }
+    </script>
+</body>
+</html>
