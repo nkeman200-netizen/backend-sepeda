@@ -25,6 +25,7 @@ public class SecurityConfig {
             // 1. Aturan CORS (Sintaks Spring Boot 3 yang benar)
             .cors(cors -> cors.configurationSource(request -> {
                 var corsConfiguration = new org.springframework.web.cors.CorsConfiguration();
+                corsConfiguration.setAllowedOrigins(java.util.List.of("http://localhost:5173", "https://frontend-sepeda.vercel.app"));
                 corsConfiguration.setAllowedOrigins(java.util.List.of("*"));
                 corsConfiguration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                 corsConfiguration.setAllowedHeaders(java.util.List.of("*"));
