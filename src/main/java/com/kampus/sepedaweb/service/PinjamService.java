@@ -67,6 +67,7 @@ public class PinjamService {
     @Transactional
     public KembaliResponseDTO kembali(Integer  id, Integer idUser){
         Pinjam peminjaman=pinjamRepository.findById(id).orElse(null);
+        User user=userRepository.findUserById(idUser);
         
         if (peminjaman == null) {
             throw new IllegalArgumentException("Gagal: peminjaman "+id+" tidak ditemukan");
@@ -75,7 +76,7 @@ public class PinjamService {
             throw new IllegalArgumentException("Gagal: Sepeda "+id+" sudah dikembalikan");
         }
         if (!peminjaman.getUser().getId().equals(idUser)) {
-            throw new IllegalArgumentException("Gagal: user "+idUser+" bukan peminjam");
+            throw new IllegalArgumentException("Gagal: user "+user.getUsername()+" bukan peminjam");
         }
         
         peminjaman.setWaktuKembali(LocalDateTime.now());
