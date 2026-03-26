@@ -111,7 +111,7 @@ public class PinjamService {
     }
     
     public Integer isPinjam(Integer id){
-        Optional<Pinjam> pinjamOpt = pinjamRepository.findByIdUserAndWaktuKembaliIsNull(id);
+        Optional<Pinjam> pinjamOpt = pinjamRepository.findByUserIdAndWaktuKembaliIsNull(id);
         
         // Jangan cek != null, tapi gunakan .isPresent()
         if (pinjamOpt.isPresent()) {

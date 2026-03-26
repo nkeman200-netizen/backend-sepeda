@@ -12,5 +12,5 @@ public interface PinjamRepository extends JpaRepository<Pinjam,Integer > {
     boolean existsByUserIdAndWaktuKembaliIsNull(Integer id);
     boolean existsBySepedaIdAndWaktuKembaliIsNull(Integer id);
     //cari peminjaman dari iduser yang blm dikembaliin
-    Optional<Pinjam> findByIdUserAndWaktuKembaliIsNull(Integer id);
+    Optional<Pinjam> findByUserIdAndWaktuKembaliIsNull(Integer id);
 } 
