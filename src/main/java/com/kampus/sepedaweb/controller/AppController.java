@@ -109,6 +109,12 @@ public class AppController {
         return pinjamService.pinjam(idSpd, idUser, pinjamReq);
     }
     
+    @GetMapping("/pinjam/aktif")
+    public Integer isPinjam(Authentication authentication){
+        Integer idUser= (Integer) authentication.getCredentials();
+        return pinjamService.isPinjam(idUser);
+    }
+    
     @PutMapping("/pinjam/{idSpd}/kembali")
     public KembaliResponseDTO kembali(@PathVariable Integer idSpd, Authentication authentication)
     {

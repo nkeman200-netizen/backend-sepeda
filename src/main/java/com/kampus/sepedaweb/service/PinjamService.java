@@ -3,6 +3,7 @@ package com.kampus.sepedaweb.service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -109,4 +110,15 @@ public class PinjamService {
         return allRiwayat;
     }
     
+    public Integer isPinjam(Integer id){
+        Optional<Pinjam> pinjamOpt = pinjamRepository.findByIdUserAndWaktuKembaliIsNull(id);
+        
+        // Jangan cek != null, tapi gunakan .isPresent()
+        if (pinjamOpt.isPresent()) {
+            // Gunakan .get() untuk mengambil objek asli di dalam kotak Optional
+            return pinjamOpt.get().getId(); 
+        }
+        
+        return null; // Atau kembalikan 0 jika tidak ada pinjaman aktif
+    } 
 }
