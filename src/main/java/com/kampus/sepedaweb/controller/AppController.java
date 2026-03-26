@@ -110,11 +110,11 @@ public class AppController {
         return pinjamService.pinjam(idSpd, idUser, pinjamReq);
     }
     
-    @PutMapping("/pidnjam/{i}/kembali")
-    public KembaliResponseDTO kembali(@PathVariable Integer id, Authentication authentication)
+    @PutMapping("/pinjam/{idSpd}/kembali")
+    public KembaliResponseDTO kembali(@PathVariable Integer idSpd, Authentication authentication)
     {
         Integer idUser=(Integer) authentication.getCredentials();
-        return pinjamService.kembali(id,idUser);
+        return pinjamService.kembali(idSpd,idUser);
     }
     
     @PostMapping("register/mahasiswa")  

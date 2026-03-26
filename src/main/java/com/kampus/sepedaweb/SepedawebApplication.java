@@ -1,10 +1,7 @@
 package com.kampus.sepedaweb;
 
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.boot.autoconfigure.SpringBootApplication;;
 
 @SpringBootApplication
 public class SepedawebApplication {
@@ -33,22 +30,22 @@ public class SepedawebApplication {
     //     };
     // }
 
-    @Bean
-    public CommandLineRunner insertMahasiswa(JdbcTemplate jdbcTemplate) {
-        return args -> {
-            try {
-                // 1. Hapus dulu akun ddd yang cacat (terpotong)
-                jdbcTemplate.execute("DELETE FROM users WHERE username = 'ddd'");
+    // @Bean
+    // public CommandLineRunner insertMahasiswa(JdbcTemplate jdbcTemplate) {
+    //     return args -> {
+    //         try {
+    //             // 1. Hapus dulu akun ddd yang cacat (terpotong)
+    //             jdbcTemplate.execute("DELETE FROM users WHERE username = 'ddd'");
                 
-                // 2. Tembakkan user mahasiswa dengan password BCrypt yang utuh
-                jdbcTemplate.execute("INSERT INTO users (id, username, password, role, nim) VALUES (2, 'ddd', '$2a$12$PID8h9FD9JxS8mtLEhatC.SxlfOFeu/gD7N0EJHrTsxQb7tv83qrq', 'mahasiswa', '250102125')");
+    //             // 2. Tembakkan user mahasiswa dengan password BCrypt yang utuh
+    //             jdbcTemplate.execute("INSERT INTO users (id, username, password, role, nim) VALUES (2, 'ddd', '$2a$12$PID8h9FD9JxS8mtLEhatC.SxlfOFeu/gD7N0EJHrTsxQb7tv83qrq', 'mahasiswa', '250102125')");
                 
-                System.out.println("=========================================");
-                System.out.println("✅ BERHASIL: AKUN MAHASISWA (ddd) DIBUAT!");
-                System.out.println("=========================================");
-            } catch (Exception e) {
-                System.out.println("Gagal membuat akun mahasiswa: " + e.getMessage());
-            }
-        };
-    }
+    //             System.out.println("=========================================");
+    //             System.out.println("✅ BERHASIL: AKUN MAHASISWA (ddd) DIBUAT!");
+    //             System.out.println("=========================================");
+    //         } catch (Exception e) {
+    //             System.out.println("Gagal membuat akun mahasiswa: " + e.getMessage());
+    //         }
+    //     };
+    // }
 }
