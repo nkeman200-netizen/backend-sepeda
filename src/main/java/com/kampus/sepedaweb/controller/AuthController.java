@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kampus.sepedaweb.dto.LoginRequestDTO;
+import com.kampus.sepedaweb.entity.Admin;
+import com.kampus.sepedaweb.entity.Mahasiswa;
 import com.kampus.sepedaweb.entity.User;
 import com.kampus.sepedaweb.repository.UserRepository;
 import com.kampus.sepedaweb.security.JwtUtil;
@@ -31,7 +33,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<Map<String ,String >> login(@RequestBody LoginRequestDTO loginData){
-        System.out.println(">>> HASH UNTUK PASSWORD INI: " + passwordEncoder.encode(loginData.getPassword()));
+        // System.out.println(">>> HASH UNTUK PASSWORD INI: " + passwordEncoder.encode(loginData.getPassword()));
         User user=userRepository.findUserByUsername(loginData.getUsername());
         if (user != null && passwordEncoder.matches(loginData.getPassword(), user.getPassword())) {
             String role=user.getRole();
@@ -46,4 +48,19 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(erorResponse);
         }
     }
+
+    @PostMapping("register/mahasiswa")  
+    public Mahasiswa registerMahasiswa(@RequestBody Mahasiswa mahasiswa)    
+    {
+        mahasiswa.setPassword(passwordEncoder.encode(mahasiswa.getPassword()));
+        return userRepository.save(mahasiswa);
+    }
+
+    @PostMapping("register/admin")  
+    public Admin registerAdmin(@RequestBody Admin admin)
+    {
+        admin.setPassword(passwordEncoder.encode(admin.getPassword()));
+        return userRepository.save(admin);
+    }
+
 }

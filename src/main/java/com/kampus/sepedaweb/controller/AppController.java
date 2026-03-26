@@ -25,7 +25,6 @@ import com.kampus.sepedaweb.dto.PinjamRequestDTO;
 import com.kampus.sepedaweb.dto.PinjamResponseDTO;
 import com.kampus.sepedaweb.dto.RiwayatResponsDTO;
 import com.kampus.sepedaweb.entity.Admin;
-import com.kampus.sepedaweb.entity.Mahasiswa;
 import com.kampus.sepedaweb.entity.Sepeda;
 import com.kampus.sepedaweb.repository.PinjamRepository;
 import com.kampus.sepedaweb.repository.SepedaRepository;
@@ -115,12 +114,6 @@ public class AppController {
     {
         Integer idUser=(Integer) authentication.getCredentials();
         return pinjamService.kembali(idSpd,idUser);
-    }
-    
-    @PostMapping("register/mahasiswa")  
-    Mahasiswa registerMahasiswa(@RequestBody Mahasiswa mahasiswa)
-    {
-        return userRepository.save(mahasiswa);
     }
 
     @PostMapping("register/admin")
