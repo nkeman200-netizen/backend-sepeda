@@ -32,4 +32,23 @@ public class SepedawebApplication {
     //         }
     //     };
     // }
+
+    @Bean
+    public CommandLineRunner insertMahasiswa(JdbcTemplate jdbcTemplate) {
+        return args -> {
+            try {
+                // 1. Hapus dulu akun ddd yang cacat (terpotong)
+                jdbcTemplate.execute("DELETE FROM users WHERE username = 'ddd'");
+                
+                // 2. Tembakkan user mahasiswa dengan password BCrypt yang utuh
+                jdbcTemplate.execute("INSERT INTO users (id, username, password, role, nim) VALUES (2, 'ddd', '$2a$12$PID8h9FD9JxS8mtLEhatC.SxlfOFeu/gD7N0EJHrTsxQb7tv83qrq', 'mahasiswa', '250102125')");
+                
+                System.out.println("=========================================");
+                System.out.println("✅ BERHASIL: AKUN MAHASISWA (ddd) DIBUAT!");
+                System.out.println("=========================================");
+            } catch (Exception e) {
+                System.out.println("Gagal membuat akun mahasiswa: " + e.getMessage());
+            }
+        };
+    }
 }
