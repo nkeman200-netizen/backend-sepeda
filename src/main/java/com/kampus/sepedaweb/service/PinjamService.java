@@ -43,7 +43,7 @@ public class PinjamService {
         if (!spdPijam.getStatus().equalsIgnoreCase("tersedia")) {
             throw new IllegalArgumentException("Gagal: Sepeda "+spdPijam.getMerk()+" sedang dipinjam");
         }
-        if (pinjamReq.getDurasi()>=12) {
+        if (pinjamReq.getDurasi()>12) {
             throw new IllegalArgumentException("Gagal: durasi peminjaman tidak boleh lebih dari 12 jam");
         }
         
