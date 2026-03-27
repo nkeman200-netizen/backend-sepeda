@@ -139,7 +139,7 @@ public class AppController {
     }
 
     @GetMapping("/pinjam/riwayat")
-    List<RiwayatResponsDTO> riwayatSemua(Authentication authentication){
+    List<RiwayatResponsDTO> riwayatUser(Authentication authentication){
         Integer idUser=(Integer ) authentication.getCredentials();
         return pinjamService.riwayatUser(idUser);
     }

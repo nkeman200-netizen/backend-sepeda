@@ -126,10 +126,10 @@ public class PinjamService {
         List<Pinjam> pinjams=pinjamRepository.findByUserId(id); //ambil list peminjaman
         List<RiwayatResponsDTO> allRiwayat=new ArrayList<>(); //inisisasi array respons
         for (Pinjam pinjam : pinjams) { //foreach kan
-            RiwayatResponsDTO riwayat=new RiwayatResponsDTO(pinjam.getId(), pinjam.getSepeda().getMerk(), pinjam.getUser().getUsername(), pinjam.getWaktuPinjam(), pinjam.getWaktuKembali());
+            RiwayatResponsDTO riwayat=new RiwayatResponsDTO(pinjam.getId(), pinjam.getSepeda().getMerk(), null, pinjam.getWaktuPinjam(), pinjam.getWaktuKembali());
             allRiwayat.add(riwayat);
         }
-        return allRiwayat; // return list
+        return allRiwayat; // return
     }
 
 
