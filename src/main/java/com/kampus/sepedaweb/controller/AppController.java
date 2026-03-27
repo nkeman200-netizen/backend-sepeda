@@ -128,13 +128,20 @@ public class AppController {
         return userRepository.save(admin);
     }
 
-    @GetMapping("pinjam/riwayat/{id}")
+    @GetMapping("pinjam/riwayat/{id}") //riwayat satu sepeda yang agi dipinjem (ADMIN)
     RiwayatResponsDTO riwayatPinjam(@PathVariable Integer id){
         return pinjamService.riwayat(id);
     }
     
-    @GetMapping("/pinjam/semua")
+    @GetMapping("/pinjam/semua") //semua riwayat (ADMIN)
     List<RiwayatResponsDTO> riwayatSemua(){
         return pinjamService.riwayatSemua();
     }
+
+    @GetMapping("/pinjam/riwayat")
+    List<RiwayatResponsDTO> riwayatSemua(Authentication authentication){
+        Integer idUser=(Integer ) authentication.getCredentials();
+        return pinjamService.riwayatUser(idUser);
+    }
+    
 }

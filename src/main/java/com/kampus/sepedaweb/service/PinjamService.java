@@ -91,7 +91,7 @@ public class PinjamService {
     }
     
     public RiwayatResponsDTO riwayat(Integer idSepeda){
-        Pinjam peminjaman=pinjamRepository.findBySepedaIdAndWaktuKembaliIsNull(idSepeda);
+        Pinjam peminjaman=pinjamRepository.findBySepedaIdAndWaktuKembaliIsNull(idSepeda); //peminjaman yang belum dikembaliin
         if (peminjaman == null) {
             throw new IllegalArgumentException("Gagal: peminjaman sepeda "+idSepeda+" tidak ditemukan");
         }
@@ -121,4 +121,16 @@ public class PinjamService {
         
         return null; // Atau kembalikan 0 jika tidak ada pinjaman aktif
     } 
+    
+    public List<RiwayatResponsDTO> riwayatUser(Integer id){ //cari riwayat user pribadi (MAHASISWA)
+        List<Pinjam> pinjams=pinjamRepository.findByUserId(id); //ambil list peminjaman
+        List<RiwayatResponsDTO> allRiwayat=new ArrayList<>(); //inisisasi array respons
+        for (Pinjam pinjam : pinjams) { //foreach kan
+            RiwayatResponsDTO riwayat=new RiwayatResponsDTO(pinjam.getId(), pinjam.getSepeda().getMerk(), pinjam.getUser().getUsername(), pinjam.getWaktuPinjam(), pinjam.getWaktuKembali());
+            allRiwayat.add(riwayat);
+        }
+        return allRiwayat; // return list
+    }
+
+
 }
