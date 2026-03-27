@@ -64,7 +64,7 @@ public class AppController {
     }
 
     @DeleteMapping("/sepeda/{id}")
-    ResponseEntity<Map<String ,String >>  hapusSepeda(@PathVariable Integer id){
+    ResponseEntity<Map<String ,String >>  hapusSepeda(@PathVariable Integer id){ //ubah ke response entity agar jika eror masuk ke catch dan program tidak berat 
         Map<String , String > response=new HashMap<>();
 
         if (pinjamRepository.existsBySepedaIdAndWaktuKembaliIsNull(id)) {
