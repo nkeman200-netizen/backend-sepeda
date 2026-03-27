@@ -43,6 +43,10 @@ public class PinjamService {
         if (!spdPijam.getStatus().equalsIgnoreCase("tersedia")) {
             throw new IllegalArgumentException("Gagal: Sepeda "+spdPijam.getMerk()+" sedang dipinjam");
         }
+        if (pinjamReq.getDurasi()>=12) {
+            throw new IllegalArgumentException("Gagal: durasi peminjaman tidak boleh lebih dari 12 jam");
+        }
+        
         String nim="-";
         if (mhs instanceof Mahasiswa mahasiswa) {
             nim=mahasiswa.getNim();
@@ -90,13 +94,13 @@ public class PinjamService {
         return responseAman;
     }
     
-    public RiwayatResponsDTO riwayat(Integer idSepeda){
+    public RiwayatResponsDTO riwayat(Integer idSepeda){ //satu riwayat sepeda
         Pinjam peminjaman=pinjamRepository.findBySepedaIdAndWaktuKembaliIsNull(idSepeda); //peminjaman yang belum dikembaliin
         if (peminjaman == null) {
             throw new IllegalArgumentException("Gagal: peminjaman sepeda "+idSepeda+" tidak ditemukan");
         }
 
-        RiwayatResponsDTO responseAman=new RiwayatResponsDTO(peminjaman.getId(),peminjaman.getSepeda().getMerk(),peminjaman.getUser().getUsername(),peminjaman.getWaktuPinjam(),peminjaman.getWaktuKembali());
+        RiwayatResponsDTO responseAman=new RiwayatResponsDTO(peminjaman.getId(),peminjaman.getSepeda().getMerk(),peminjaman.getUser().getUsername(),peminjaman.getDurasi(),peminjaman.getWaktuPinjam(),peminjaman.getWaktuKembali());
         return responseAman;
     }
 
@@ -104,7 +108,7 @@ public class PinjamService {
         List<Pinjam> pinjams=pinjamRepository.findAll();
         List<RiwayatResponsDTO> allRiwayat = new ArrayList<>();
         for (Pinjam pinjam : pinjams) {
-            RiwayatResponsDTO riwayat=new RiwayatResponsDTO(pinjam.getId(), pinjam.getSepeda().getMerk(), pinjam.getUser().getUsername(), pinjam.getWaktuPinjam(), pinjam.getWaktuKembali());
+            RiwayatResponsDTO riwayat=new RiwayatResponsDTO(pinjam.getId(), pinjam.getSepeda().getMerk(), pinjam.getUser().getUsername(),pinjam.getDurasi(), pinjam.getWaktuPinjam(), pinjam.getWaktuKembali());
             allRiwayat.add(riwayat);
         }
         return allRiwayat;
@@ -126,7 +130,7 @@ public class PinjamService {
         List<Pinjam> pinjams=pinjamRepository.findByUserId(id); //ambil list peminjaman
         List<RiwayatResponsDTO> allRiwayat=new ArrayList<>(); //inisisasi array respons
         for (Pinjam pinjam : pinjams) { //foreach kan
-            RiwayatResponsDTO riwayat=new RiwayatResponsDTO(pinjam.getId(), pinjam.getSepeda().getMerk(), null, pinjam.getWaktuPinjam(), pinjam.getWaktuKembali());
+            RiwayatResponsDTO riwayat=new RiwayatResponsDTO(pinjam.getId(), pinjam.getSepeda().getMerk(), null,pinjam.getDurasi(), pinjam.getWaktuPinjam(), pinjam.getWaktuKembali());
             allRiwayat.add(riwayat);
         }
         return allRiwayat; // return

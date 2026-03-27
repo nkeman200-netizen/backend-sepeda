@@ -6,11 +6,12 @@ public class RiwayatResponsDTO {
     private Integer idPinjam;
     private String merkSepeda;
     private String username;
+    private Integer durasi;
     private LocalDateTime waktuPinjam;
     private LocalDateTime waktuKembali;
 
-    public RiwayatResponsDTO(Integer idPinjam, String merkSepeda,String username,LocalDateTime waktuPinjam, LocalDateTime waktuKembali){
-        this.idPinjam=idPinjam;this.merkSepeda=merkSepeda;this.username=username;this.waktuKembali=waktuKembali;this.waktuPinjam=waktuPinjam;
+    public RiwayatResponsDTO(Integer idPinjam, String merkSepeda,String username, Integer durasi,LocalDateTime waktuPinjam, LocalDateTime waktuKembali){
+        this.idPinjam=idPinjam;this.merkSepeda=merkSepeda;this.username=username;this.durasi=durasi;this.waktuKembali=waktuKembali;this.waktuPinjam=waktuPinjam;
     }
 
     public void setIdPinjam(Integer idPinjam) {
@@ -27,6 +28,12 @@ public class RiwayatResponsDTO {
     }
     public void setWaktuPinjam(LocalDateTime waktuPinjam) {
         this.waktuPinjam = waktuPinjam;
+    }
+    public void setDurasi(Integer durasi) {
+        this.durasi = durasi;
+    }
+    public Integer getDurasi() {
+        return durasi;
     }
     public Integer getIdPinjam() {
         return idPinjam;
