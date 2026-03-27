@@ -8,6 +8,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -53,11 +55,6 @@ public class AppController {
         return sepedaRepository.findAllByStatusNot("dihapus", halaman);
     }
     
-    @GetMapping("/sepeda/tersedia")
-    List<Sepeda> sepedaSedia(){
-        return sepedaRepository.findSepedaByStatus("tersedia");
-    }
-    
     @PostMapping("/sepeda")
     Sepeda tambahSepeda(@RequestBody Sepeda sepedaBaru) {
         if (sepedaBaru.getStatus() == null) {
@@ -67,28 +64,23 @@ public class AppController {
     }
 
     @DeleteMapping("/sepeda/{id}")
-    Map<String ,String >  hapusSepeda(@PathVariable Integer id){
+    ResponseEntity<Map<String ,String >>  hapusSepeda(@PathVariable Integer id){
         Map<String , String > response=new HashMap<>();
+
         if (pinjamRepository.existsBySepedaIdAndWaktuKembaliIsNull(id)) {
-            response.put("status", "Gagal");
-            response.put("pesan", "Sepeda gagal dihapus, sepeda sedang dipinjam");
-            response.put("icon", "error");
-            return response;
+            response.put("pesan", "Sepeda gagal dihapus karena sedang dipinjam mahasiswa.");
+            return ResponseEntity.badRequest().body(response); //badrequest = requeest ditolak
             // throw new IllegalArgumentException("Tidak bisa hapus, Sepeda sedang dipinjam");
         }
         Sepeda sepeda=sepedaRepository.findSepedaById(id);
         if (sepeda != null) {
             sepeda.setStatus("dihapus");
             sepedaRepository.save(sepeda);
-            response.put("status", "Berhasil");
-            response.put("pesan", "Sepeda berhasil dihapus");        
-            response.put("icon", "success");
-            return response;
+            response.put("pesan", "Sepeda berhasil dihapus");
+            return ResponseEntity.ok(response);
         }
-        response.put("status", "Tidak ditemukan");
-        response.put("pesan", "Sepeda gagal dihapus, sepeda tidak ditemukan");
-        response.put("icon", "error");
-        return response;
+        response.put("pesan", "Sepeda tidak ditemukan");
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response); //not found = tidak ditemukan
     }
 
     @PutMapping("/sepeda/{id}")
