@@ -1,5 +1,7 @@
 package com.kampus.sepedaweb.controller;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -50,8 +53,22 @@ public class AppController {
     private PinjamService pinjamService;
 
     @GetMapping("/sepeda")
-    public Page<Sepeda> lihatSemuaSepeda(@RequestParam (defaultValue = "0") Integer page, @RequestParam (defaultValue = "10") Integer size) {
-        Pageable halaman=PageRequest.of(page, size, Sort.by("id").descending());
+    public Page<Sepeda> lihatSemuaSepeda(
+            @RequestParam (defaultValue = "0") Integer page, 
+            @RequestParam (defaultValue = "10") Integer size, 
+            @RequestParam(required = false) String merk,
+            // 1. Tambahkan dua penangkap parameter ini:
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir
+    ) {
+        // 2. Logika menerjemahkan string "asc"/"desc" menjadi perintah Sort Spring Boot
+        Sort.Direction direction = sortDir.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        
+        // 3. Masukkan 'direction' dan 'sortBy' ke dalam PageRequest
+        Pageable halaman = PageRequest.of(page, size, Sort.by(direction, sortBy));
+        if (merk!=null && !merk.isEmpty()) {
+            return sepedaRepository.sepedaCari(merk, "dihapus", halaman);
+        }
         return sepedaRepository.findAllByStatusNot("dihapus", halaman);
     }
     
@@ -102,7 +119,7 @@ public class AppController {
     }
     
     @GetMapping("/pinjam/aktif")
-    public Integer isPinjam(Authentication authentication){
+    public RiwayatResponsDTO isPinjam(Authentication authentication){
         Integer idUser= (Integer) authentication.getCredentials();
         return pinjamService.isPinjam(idUser);
     }
@@ -126,14 +143,70 @@ public class AppController {
     }
     
     @GetMapping("/pinjam/semua") //semua riwayat (ADMIN)
-    List<RiwayatResponsDTO> riwayatSemua(){
-        return pinjamService.riwayatSemua();
+    Page<RiwayatResponsDTO> riwayatSemua(
+        @RequestParam (defaultValue = "0") Integer page, 
+        @RequestParam (defaultValue = "11") Integer size, 
+        // 1. Tambahkan dua penangkap parameter ini:
+        @RequestParam(defaultValue = "id") String sortBy,
+        @RequestParam(defaultValue = "desc") String sortDir,
+        // Ubah tipe data menjadi LocalDate (hapus @DateTimeFormat karena format bawaan spring boot untuk LocalDate sudah yyyy-MM-dd)
+        @RequestParam(required = false) LocalDate awal,
+        @RequestParam(required = false) LocalDate akhir
+    ){
+        // 2. Logika "Default 7 Hari Terakhir"
+        if (akhir == null) {
+            akhir = LocalDate.now(); // Jika kosong, set ke hari ini, detik ini
+        }
+        if (awal == null) {
+            awal = akhir.minusDays(7); // Jika kosong, set ke 7 hari sebelum tanggal akhir
+        }
+
+        // 2. UBAH KE DATETIME! 
+        // Awal = 00:00:00, Akhir = 23:59:59
+        LocalDateTime awalDateTime = awal.atStartOfDay(); 
+        LocalDateTime akhirDateTime = akhir.atTime(23, 59, 59);
+        return pinjamService.riwayatSemua(page,size,sortBy,sortDir,awalDateTime,akhirDateTime);
     }
 
-    @GetMapping("/pinjam/riwayat")
-    List<RiwayatResponsDTO> riwayatUser(Authentication authentication){
-        Integer idUser=(Integer ) authentication.getCredentials();
-        return pinjamService.riwayatUser(idUser);
+    @GetMapping("/pinjam/riwayat") //riwayat pribadi (MAHASISWA)
+    Page<RiwayatResponsDTO> riwayatUser(
+        Authentication authentication,
+        @RequestParam (defaultValue = "0") Integer page, 
+        @RequestParam (defaultValue = "11") Integer size, 
+        // 1. Tambahkan dua penangkap parameter ini:
+        @RequestParam(defaultValue = "id") String sortBy,
+        @RequestParam(defaultValue = "desc") String sortDir,
+        // Ubah tipe data menjadi LocalDate (hapus @DateTimeFormat karena format bawaan spring boot untuk LocalDate sudah yyyy-MM-dd)
+        @RequestParam(required = false) LocalDate awal,
+        @RequestParam(required = false) LocalDate akhir
+    ){
+        Integer idUser = (Integer) authentication.getCredentials();
+        // 2. Logika "Default 7 Hari Terakhir"
+        if (akhir == null) {
+            akhir = LocalDate.now(); // Jika kosong, set ke hari ini, detik ini
+        }
+        if (awal == null) {
+            awal = akhir.minusDays(7); // Jika kosong, set ke 7 hari sebelum tanggal akhir
+        }
+
+        // 2. UBAH KE DATETIME! 
+        // Awal = 00:00:00, Akhir = 23:59:59
+        LocalDateTime awalDateTime = awal.atStartOfDay(); 
+        LocalDateTime akhirDateTime = akhir.atTime(23, 59, 59);
+        return pinjamService.riwayatUser(idUser,page,size,sortBy,sortDir,awalDateTime,akhirDateTime);
     }
     
+    @GetMapping("/pinjam/riwayat/stat")
+    Map<String ,Long> riwayatStat(){
+        Map<String ,Long> response=new HashMap<>();
+        Long tersedia=  sepedaRepository.countByStatus("tersedia");
+        Long dihapus= sepedaRepository.countByStatus("dihapus");
+        Long dipinjam= sepedaRepository.countByStatus("dipinjam");
+
+        response.put("dipinjam", dipinjam);
+        response.put("dihapus", dihapus);
+        response.put("tersedia", tersedia);
+        return response;
+    }
+
 }

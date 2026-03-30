@@ -1,11 +1,15 @@
 package com.kampus.sepedaweb.service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -94,6 +98,20 @@ public class PinjamService {
         return responseAman;
     }
     
+    public RiwayatResponsDTO isPinjam(Integer idUser){
+        Optional<Pinjam> pinjamOpt = pinjamRepository.findByUserIdAndWaktuKembaliIsNull(idUser);
+        
+        // Jangan cek != null, tapi gunakan .isPresent()
+        if (pinjamOpt.isPresent()) {
+            // Gunakan .get() untuk mengambil objek asli di dalam kotak Optional
+            Integer  idPinjam= pinjamOpt.get().getId();
+            String  merkSpd=pinjamOpt.get().getSepeda().getMerk();
+            return new RiwayatResponsDTO(idPinjam, merkSpd, null, null, null, null);
+        }
+        
+        return null; // Atau kembalikan 0 jika tidak ada pinjaman aktif
+    } 
+    
     public RiwayatResponsDTO riwayat(Integer idSepeda){ //satu riwayat sepeda
         Pinjam peminjaman=pinjamRepository.findBySepedaIdAndWaktuKembaliIsNull(idSepeda); //peminjaman yang belum dikembaliin
         if (peminjaman == null) {
@@ -104,36 +122,64 @@ public class PinjamService {
         return responseAman;
     }
 
-    public List<RiwayatResponsDTO> riwayatSemua(){
-        List<Pinjam> pinjams=pinjamRepository.findAll();
-        List<RiwayatResponsDTO> allRiwayat = new ArrayList<>();
-        for (Pinjam pinjam : pinjams) {
-            RiwayatResponsDTO riwayat=new RiwayatResponsDTO(pinjam.getId(), pinjam.getSepeda().getMerk(), pinjam.getUser().getUsername(),pinjam.getDurasi(), pinjam.getWaktuPinjam(), pinjam.getWaktuKembali());
-            allRiwayat.add(riwayat);
+    // public List<RiwayatResponsDTO> riwayatSemua(){
+    //     List<Pinjam> pinjams=pinjamRepository.findAll();
+    //     List<RiwayatResponsDTO> allRiwayat = new ArrayList<>();
+    //     for (Pinjam pinjam : pinjams) {
+    //         RiwayatResponsDTO riwayat=new RiwayatResponsDTO(pinjam.getId(), pinjam.getSepeda().getMerk(), pinjam.getUser().getUsername(),pinjam.getDurasi(), pinjam.getWaktuPinjam(), pinjam.getWaktuKembali());
+    //         allRiwayat.add(riwayat);
+    //     }
+    //     return allRiwayat;
+    // }
+
+    public Page<RiwayatResponsDTO> riwayatSemua(
+            Integer page,
+            Integer size,
+            String sortBy,
+            String sortDir, 
+            LocalDateTime awal, 
+            LocalDateTime akhir
+        ){ 
+        // Jika tanggal akhir ternyata ada SEBELUM tanggal awal
+        if (akhir.isBefore(awal)) {
+            throw new IllegalArgumentException("Gagal: Tanggal akhir tidak boleh mendahului tanggal awal");
         }
-        return allRiwayat;
+
+        // 3. Masukkan 'direction' dan 'sortBy' ke dalam PageRequest
+        Sort.Direction direction = sortDir.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable halaman = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+        Page<Pinjam> pagePinjam=pinjamRepository.findByWaktuPinjamBetween(awal,akhir,halaman); //ambil list peminjaman
+        Page<RiwayatResponsDTO> responsePage= pagePinjam.map(
+            pinjam-> new RiwayatResponsDTO(pinjam.getId(), pinjam.getSepeda().getMerk(), pinjam.getUser().getUsername(), pinjam.getDurasi(), pinjam.getWaktuPinjam(), pinjam.getWaktuKembali())
+        );
+        return responsePage;
     }
-    
-    public Integer isPinjam(Integer id){
-        Optional<Pinjam> pinjamOpt = pinjamRepository.findByUserIdAndWaktuKembaliIsNull(id);
-        
-        // Jangan cek != null, tapi gunakan .isPresent()
-        if (pinjamOpt.isPresent()) {
-            // Gunakan .get() untuk mengambil objek asli di dalam kotak Optional
-            return pinjamOpt.get().getId(); 
+
+    //cari riwayat user pribadi (MAHASISWA)
+    public Page<RiwayatResponsDTO> riwayatUser(
+            Integer idUser, 
+            Integer page,
+            Integer size,
+            String sortBy,
+            String sortDir, 
+            LocalDateTime awal, 
+            LocalDateTime akhir
+        ){ 
+        // Jika tanggal akhir ternyata ada SEBELUM tanggal awal
+        if (akhir.isBefore(awal)) {
+            throw new IllegalArgumentException("Gagal: Tanggal akhir tidak boleh mendahului tanggal awal");
         }
-        
-        return null; // Atau kembalikan 0 jika tidak ada pinjaman aktif
-    } 
-    
-    public List<RiwayatResponsDTO> riwayatUser(Integer id){ //cari riwayat user pribadi (MAHASISWA)
-        List<Pinjam> pinjams=pinjamRepository.findByUserId(id); //ambil list peminjaman
-        List<RiwayatResponsDTO> allRiwayat=new ArrayList<>(); //inisisasi array respons
-        for (Pinjam pinjam : pinjams) { //foreach kan
-            RiwayatResponsDTO riwayat=new RiwayatResponsDTO(pinjam.getId(), pinjam.getSepeda().getMerk(), null,pinjam.getDurasi(), pinjam.getWaktuPinjam(), pinjam.getWaktuKembali());
-            allRiwayat.add(riwayat);
-        }
-        return allRiwayat; // return
+
+        // 3. Masukkan 'direction' dan 'sortBy' ke dalam PageRequest
+        Sort.Direction direction = sortDir.equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
+        Pageable halaman = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+        Page<Pinjam> pagePinjam=pinjamRepository.findByUserIdAndWaktuPinjamBetween(idUser,awal,akhir,halaman); //ambil list peminjaman
+        Page<RiwayatResponsDTO> responsePage= pagePinjam.map(
+            pinjam-> new RiwayatResponsDTO(pinjam.getId(), pinjam.getSepeda().getMerk(), pinjam.getUser().getUsername(), pinjam.getDurasi(), pinjam.getWaktuPinjam(), pinjam.getWaktuKembali())
+        );
+        return responsePage;
     }
 
 
